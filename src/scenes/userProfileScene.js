@@ -95,7 +95,16 @@ const userProfileScene = new Scenes.WizardScene(
 
             // Show user profile
             await showUserProfile(ctx, user);
-            return ctx.scene.leave();
+
+            // Ask for another ID instead of leaving the scene
+            await ctx.reply('🔍 <b>Yana boshqa profil ko\'rish uchun ID yuboring yoki bekor qiling:</b>', {
+                parse_mode: 'HTML',
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback('❌ Bekor qilish (Chiqish)', 'cancel_profile_search')
+                ])
+            });
+
+            return; // stay in the current step to receive more IDs
 
         } catch (e) {
             logger.error('UserProfileScene step 2 error:', e);
