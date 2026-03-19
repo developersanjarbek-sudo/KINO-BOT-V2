@@ -145,6 +145,9 @@ const broadcastScene = new Scenes.WizardScene(
                         } catch (e) {
                             failed++;
                         }
+                        
+                        // Add small 40ms delay to avoid Telegram 429 Too Many Requests error
+                        await new Promise(r => setTimeout(r, 40));
 
                         // Update progress every 50 users to avoid Telegram Too Many Requests on editMessageText
                         if (i % 50 === 0 && i > 0) {

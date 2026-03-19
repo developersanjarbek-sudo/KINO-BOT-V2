@@ -17,6 +17,7 @@ const vipPromoMessages = [
 import NodeCache from 'node-cache';
 const rateLimitCache = new NodeCache({ stdTTL: 60, checkperiod: 60 });
 const strikesCache = new NodeCache({ stdTTL: 3600, checkperiod: 300 });
+const subStatusCache = new NodeCache({ stdTTL: 600, checkperiod: 60 }); // 10 minutes cache for sub check
 
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 30; // 30 requests per minute
@@ -145,11 +146,9 @@ export const authMiddleware = async (ctx, next) => {
                 return next();
             }
 
-            // Per-session cache: if user passed subscription check recently, don't re-check each message.
+            // Per-cache check: if user passed subscription check recently, don't re-check each message.
             // This avoids slow getChatMember on every text.
-            const nowSession = Date.now();
-            const SESSION_SUB_TTL_MS = 10 * 60 * 1000;
-            if (ctx.session?.subOkUntil && nowSession < ctx.session.subOkUntil) {
+            if (subStatusCache.get(userId)) {
                 return next();
             }
 
@@ -172,10 +171,8 @@ export const authMiddleware = async (ctx, next) => {
                 return; // Stop processing - user must subscribe first
             }
 
-            // Mark as ok for a while
-            if (ctx.session) {
-                ctx.session.subOkUntil = Date.now() + SESSION_SUB_TTL_MS;
-            }
+            // Mark as ok for a while in cache (10 min TTL handled by NodeCache default)
+            subStatusCache.set(userId, true);
         } catch (e) {
             logger.error('Subscription check error:', e);
             // Continue on error to not block users

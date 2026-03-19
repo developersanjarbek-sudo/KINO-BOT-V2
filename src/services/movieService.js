@@ -21,7 +21,10 @@ export const getMovieByCode = async (code) => {
 
 export const searchMovies = async (query) => {
     try {
-        return await Movie.find({ title: { $regex: query, $options: 'i' } }).limit(20);
+        return await Movie.find(
+            { $text: { $search: query } },
+            { score: { $meta: "textScore" } }
+        ).sort({ score: { $meta: "textScore" } }).limit(20);
     } catch (error) {
         logger.error('Search movies error:', error);
         return [];

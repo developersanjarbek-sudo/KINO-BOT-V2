@@ -66,8 +66,10 @@ export const setupInlineSearch = (bot) => {
             }
 
             const movies = await Movie.find({
-                title: { $regex: query, $options: 'i' }
-            }).limit(20);
+                $text: { $search: query }
+            }, { score: { $meta: "textScore" } })
+            .sort({ score: { $meta: "textScore" } })
+            .limit(20);
 
             const results = movies.map((movie) => ({
                 type: 'article',

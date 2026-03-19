@@ -42,6 +42,10 @@ const movieSchema = new mongoose.Schema({
 
 const Movie = mongoose.model('Movie', movieSchema);
 
+// Create text index for fast search
+movieSchema.index({ title: 'text' });
+
+
 // Virtual for average rating
 movieSchema.virtual('averageRating').get(function () {
     if (this.ratingCount === 0) return 0;
